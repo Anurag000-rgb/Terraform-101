@@ -1,44 +1,54 @@
 provider "aws" {
   region = "us-east-1"
-  # export AWS_SECRET_ACCESS_KEY=ZvQPIMx4DiAhp5vkbQC1tCeqKcdKsCRnK94v7fTy
-  # export AWS_ACCESS_KEY_ID=AKIA2HCGCDGSKIUHUFUC  
 }
 
-variable "all_cidr_block" {
-  description = "vpc and subnets cidr block"
-  type = list(object({
-    cidr_block = string
-    name       = string
-  }))
+variable "vpc_cidr_block" {
+  description = "vpc cidr block"
+}
+
+variable "subnet_cidr_block" {
+  description = "subnet cidr block"
+}
+
+variable "env_prefix" {
+  description = "environment prefix"
 }
 
 
-resource "aws_vpc" "dev-vpc" {
-  cidr_block = var.all_cidr_block[0].cidr_block
+resource "aws_vpc" "myapp-vpc" {
+  cidr_block = var.vpc_cidr_block
   tags = {
-    Name = var.all_cidr_block[0].name
+    Name = "${var.env_prefix}-vpc"
   }
 }
 
-resource "aws_subnet" "dev-subnet1" {
+resource "aws_subnet" "myapp-subnet-1" {
   vpc_id            = aws_vpc.dev-vpc.id
-  cidr_block        = var.all_cidr_block[1].cidr_block
+  cidr_block        = var.subnet_cidr_block
   availability_zone = "us-east-1a"
   tags = {
-    Name = var.all_cidr_block[1].name
+    Name = "${var.env_prefix}-subnet-1"
   }
 }
 
-data "aws_vpc" "existing-vpc" {
-  default = "true"
-}
-
-resource "aws_subnet" "dev-subnet2" {
-  vpc_id            = data.aws_vpc.existing-vpc.id
-  cidr_block        = var.all_cidr_block[2].cidr_block
-  availability_zone = "us-east-1a"
+resource "aws_internet_gateway" "myapp-igw" {
+  vpc_id = aws_vpc.myapp-vpc.id
   tags = {
-    Name = var.all_cidr_block[2].name
+    Name = "${var.env_prefix}-igw"
   }
-
 }
+
+resource "aws_route_table" "myapp-route-table" {
+  vpc_id = aws_vpc.myapp-vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.myapp-igw.id
+  }
+  tags = {
+    Name = "${var.env_prefix}-route-table"
+  }
+}
+
+
+
