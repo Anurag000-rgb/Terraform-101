@@ -1,3 +1,7 @@
 vpc_cidr_block    = "10.3.0.0/16"
 subnet_cidr_block = "10.3.10.0/24"
 env_prefix        = "dev"
+my-ip             = "49.37.43.83/32"
+ec2-instance-type = "t2.micro"
+availability-zone = "us-east-1a"
+public-key        = "/Users/anurag/.ssh/id_ed25519.pub"
